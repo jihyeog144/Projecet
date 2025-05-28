@@ -7,6 +7,7 @@ public class GameManager : MonoBehaviour
     public List<PlayerController> players;
     public Gun shotgun;
     private int currentPlayerIndex = 0;
+    private int currentIndex = 0;
 
     void Start()
     {
@@ -27,6 +28,31 @@ public class GameManager : MonoBehaviour
     void StartTurn()
     {
 
+            if (players.Count <= 1)
+            {
+                Debug.Log(players[0].playerName + " ½Â¸®!");
+                return;
+            }
+
+            PlayerController player = players[currentIndex];
+            Shell result = shotgun.Fire();
+
+           // player.ReactToShot(result);
+
+            // UI °»½Å
+            //uiManager.UpdateShellUI(shotgun.RemainingShellCount());
+
+            if (!player.isAlive)
+            {
+                players.RemoveAt(currentIndex);
+            }
+            else
+            {
+                currentIndex++;
+            }
+
+            currentIndex %= players.Count;
+            Invoke("StartTurn", 2f);
     }
     void NextTurn()
     {
@@ -67,4 +93,4 @@ public class GameManager : MonoBehaviour
         currentPlayerIndex = (currentPlayerIndex + 1) % players.Count;
         Invoke("NextTurn", 2f);
     }
-}
+} 

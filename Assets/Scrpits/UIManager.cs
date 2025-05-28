@@ -7,6 +7,7 @@ public class UIManager : MonoBehaviour
 {
     public AudioSource heartbeatAudio;
     public Image vignette;
+    public Text shellText;
 
     public void ShowTensionEffect()
     {
@@ -20,4 +21,10 @@ public class UIManager : MonoBehaviour
         heartbeatAudio.Stop();
         vignette.enabled = false;
     }
+
+
+    public void UpdateShellUI(int remaining)
+    {
+        shellText.text = $"³²Àº ÅºÈ¯: {remaining}";
+    }   
 }
