@@ -9,6 +9,21 @@ public class UIManager : MonoBehaviour
     public Image vignette;
     public Text shellText;
 
+    public GameObject shellPrefab;
+    public Transform shells;
+
+    public Sprite blankSprite;
+    public Sprite LiveSprite;
+
+    private List<GameObject> shellSlots = new();
+
+    public void CreatShellUI(List<Shell> shells)
+    {
+        foreach (var slot in shellSlots)
+            Destroy(slot);
+
+    }
+
     public void ShowTensionEffect()
     {
         heartbeatAudio.Play();
