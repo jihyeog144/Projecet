@@ -5,41 +5,44 @@ using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
-    public AudioSource heartbeatAudio;
-    public Image vignette;
-    public Text shellText;
-
-    public GameObject shellPrefab;
-    public Transform shells;
+    public GameObject shellSlotPrefab;     // 탄환 아이콘 프리팹
+    public Transform shellPanelParent;     // 탄환 리스트 부모 오브젝트
 
     public Sprite blankSprite;
-    public Sprite LiveSprite;
+    public Sprite buckshotSprite;
 
     private List<GameObject> shellSlots = new();
 
-    public void CreatShellUI(List<Shell> shells)
+    // 탄환 리스트 구성
+    public void CreateShellUI(List<Shell> shells)
     {
+        // 기존 슬롯 제거
         foreach (var slot in shellSlots)
             Destroy(slot);
+        shellSlots.Clear();
 
+        foreach (var shell in shells)
+        {
+            GameObject slot = Instantiate(shellSlotPrefab, shellPanelParent);
+            Image img = slot.GetComponent<Image>();
+            img.sprite = shell.Type == ShellType.Blank ? blankSprite : buckshotSprite;
+            img.color = new Color(1, 1, 1, 0.3f); // 비활성 상태처럼 처리
+            shellSlots.Add(slot);
+        }
     }
 
-    public void ShowTensionEffect()
+    // 발사 후 남은 탄 표시 강조
+    public void HighlightFiredShell(int index)
     {
-        heartbeatAudio.Play();
-        vignette.enabled = true;
-        vignette.color = new Color(0.5f, 0, 0, 0.5f); // 붉은 화면
+        if (index < shellSlots.Count)
+        {
+            var img = shellSlots[index].GetComponent<Image>();
+            img.color = Color.white; // 사용된 탄 표시
+        }
     }
 
-    public void HideTensionEffect()
+    public void UpdateShellUI()
     {
-        heartbeatAudio.Stop();
-        vignette.enabled = false;
+
     }
-
-
-    public void UpdateShellUI(int remaining)
-    {
-        shellText.text = $"남은 탄환: {remaining}";
-    }   
 }

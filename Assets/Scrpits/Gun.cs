@@ -40,4 +40,13 @@ public class Gun : MonoBehaviour
     {
         return shells.Count - currentShellIndex;
     }
+
+    public List<Shell> GetAllShells()
+    {
+        return shells;
+    }
+    public int GetCurrentIndex()
+    {
+        return currentShellIndex;
+    }
 }
