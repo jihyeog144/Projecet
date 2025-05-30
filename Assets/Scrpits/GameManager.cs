@@ -1,4 +1,4 @@
-using System.Collections;
+Ôªøusing System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class GameManager : MonoBehaviour
 {
     public List<PlayerController> players;
-    public Gun shotgun;
+    public Gun gun;
 
     public Button fireButton;
     public UIManager uiManager;
@@ -15,16 +15,23 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        int totalShells = Random.Range(4, 7); // 4~6πﬂ
-        int liveCount = Random.Range(1, Mathf.Min(3, totalShells)); // Ω«≈∫ 1~2∞≥
+        int totalShells = Random.Range(4, 7);
+        int liveCount = Random.Range(1, Mathf.Min(3, totalShells));
         int blankCount = totalShells - liveCount;
 
-        Debug.Log($"¿Ãπ¯ ∞‘¿”: ∞¯∆˜≈∫ {blankCount}πﬂ, Ω«≈∫ {liveCount}πﬂ");
+        gun.LoadShells(blankCount, liveCount);
 
-        shotgun.LoadShells(blankCount, liveCount);
+        uiManager.CreateShellUI(gun.GetAllShells());
+        uiManager.UpdateShellUI(gun.RemainingShellCount());
 
-        uiManager.CreateShellUI(shotgun.GetAllShells());
-        uiManager.UpdateShellUI(shotgun.RemainingShellCount());
+        // Ïó¨Í∏∞ÏÑú AIÎì§ÏóêÍ≤å Ï¥ùÍ∏∞(gun) Ïó∞Í≤∞
+        foreach (var player in players)
+        {
+            if (player.isAI && player.aiController != null)
+            {
+                player.aiController.gun = this.gun; // Ïó∞Í≤∞ ÏôÑÎ£å!
+            }
+        }
 
         StartTurn();
     }
@@ -33,39 +40,68 @@ public class GameManager : MonoBehaviour
     {
         if (players.Count <= 1)
         {
-            Debug.Log(players[0].playerName + " Ω¬∏Æ!");
-            fireButton.interactable = false;
+            Debug.Log("player ÏäπÎ¶¨!");
+            uiManager.EnableFireButton(false);
             return;
         }
 
-        EnableFireButton(true);
+        PlayerController player = players[currentPlayerIndex];
+
+        if (player.isAI && player.aiController != null)
+        {
+            uiManager.EnableFireButton(false);
+            player.aiController.TakeTurn(OnAICompletedTurn);
+        }
+        else
+        {
+            Debug.Log("playerÏùò Ï∞®Î°ÄÏûÖÎãàÎã§.");
+            uiManager.EnableFireButton(true);
+        }
     }
 
     public void OnFireButtonClicked()
     {
-        EnableFireButton(false);
+        FireCurrentPlayer();
+    }
 
+
+    void OnAICompletedTurn(Shell fired)
+    {
+        ProceedAfterFire(fired);
+    }
+
+    void AIFire()
+    {
+        FireCurrentPlayer();
+    }
+
+    void FireCurrentPlayer()
+    {
         PlayerController player = players[currentPlayerIndex];
-        Shell result = shotgun.Fire();
+        Shell fired = gun.Fire();
 
-        if (result == null)
+        if (fired == null)
         {
-            Debug.Log("≈∫»Ø¿Ã ∏µŒ º“¡¯µ«æ˙Ω¿¥œ¥Ÿ.");
+            Debug.Log("ÌÉÑÌôò ÏóÜÏùå!");
             return;
         }
 
-        uiManager.HighlightFiredShell(shotgun.GetCurrentIndex() - 1);
-        uiManager.UpdateShellUI(shotgun.RemainingShellCount());
+        // üî• UI Î®ºÏ†Ä Í∞±Ïã†!
+        uiManager.HighlightFiredShell(gun.GetCurrentIndex() - 1);
+        uiManager.UpdateShellUI(gun.RemainingShellCount());
 
-        if (result.Type == ShellType.Live)
-        {
+        // üî• ÌÉÄÍ≤© Ï†ÅÏö©
+        if (fired.Type == ShellType.Live)
             player.Hit(ShellType.Live);
-            player.isAlive = false;
-        }
         else
-        {
             player.ReactToBlank();
-        }
+
+        ProceedAfterFire(fired);
+    }
+
+    void ProceedAfterFire(Shell shell)
+    {
+        PlayerController player = players[currentPlayerIndex];
 
         if (!player.isAlive)
         {
@@ -78,10 +114,5 @@ public class GameManager : MonoBehaviour
 
         currentPlayerIndex %= players.Count;
         Invoke(nameof(StartTurn), 2f);
-    }
-
-    public void EnableFireButton(bool enable)
-    {
-        fireButton.interactable = enable;
     }
 }

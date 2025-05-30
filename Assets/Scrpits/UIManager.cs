@@ -11,6 +11,7 @@ public class UIManager : MonoBehaviour
     public Text shellCountText;
     public Button fireButton;
 
+
     private List<GameObject> shellSlots = new();
 
     public void CreateShellUI(List<Shell> shells)

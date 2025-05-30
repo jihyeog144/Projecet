@@ -1,44 +1,63 @@
-using System;
+ï»¿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PlayerController : GameManager
+public class PlayerController : MonoBehaviour
 {
     public bool isAlive = true;
     public int MaxHp = 3;
     public int CurrentHp;
 
-    public Text statusText; // ÇÃ·¹ÀÌ¾î »óÅÂ¸¦ ³ªÅ¸³»´Â ÅØ½ºÆ®
+    public AIController aiController;
+    public bool isAI = false;
+
+    public Text statusText;
+    public Slider hpBar; // ì²´ë ¥ UI (ì„ íƒ)
+
+    void Start()
+    {
+        CurrentHp = MaxHp;
+        UpdateHPUI();
+    }
 
     public void Die()
     {
         isAlive = false;
-        Debug.Log("Å»¶ôÇÏ¿´½À´Ï´Ù!");
-        // Å»¶ô ¾Ö´Ï¸ŞÀÌ¼Ç, ÀÌÆåÆ® µîÀ» ¿©±â¿¡
+        Debug.Log("íƒˆë½í•˜ì˜€ìŠµë‹ˆë‹¤!");
+        if (statusText != null)
+            statusText.text = "ğŸ’€ íƒˆë½";
+
+        // ì—¬ê¸°ì— íƒˆë½ ì• ë‹ˆë©”ì´ì…˜, íš¨ê³¼ ë“± ì¶”ê°€ ê°€ëŠ¥
     }
 
     public void ReactToBlank()
     {
-        Debug.Log($"ÈŞ¡¦ °øÆ÷ÅºÀÌ¾ú±º.");
+        Debug.Log("íœ´â€¦ ê³µí¬íƒ„ì´ì—ˆêµ°.");
         if (statusText != null)
-            statusText.text = "»ıÁ¸!";
+            statusText.text = "ğŸ˜® ìƒì¡´!";
     }
 
     public void Hit(ShellType shellType)
     {
-        if (shellType == ShellType.Live)
-        {
-            CurrentHp -= CurrentHp;
-        }
-        else
-            return;
+        if (shellType != ShellType.Live) return;
+
+        CurrentHp -= 1;
+        Debug.Log($"[í”¼ê²©] ë‚¨ì€ ì²´ë ¥: {CurrentHp}");
+        UpdateHPUI();
 
         if (CurrentHp <= 0)
             Die();
+        else if (statusText != null)
+            statusText.text = $"ğŸ˜µ í”¼ê²©! HP: {CurrentHp}";
+    }
 
-        else
-            return; 
+    public void UpdateHPUI()
+    {
+        if (hpBar != null)
+        {
+            hpBar.value = (float)CurrentHp / MaxHp;
+        }
     }
 }
