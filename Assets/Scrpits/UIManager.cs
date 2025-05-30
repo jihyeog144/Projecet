@@ -15,17 +15,31 @@ public class UIManager : MonoBehaviour
 
     public void CreateShellUI(List<Shell> shells)
     {
-        // 기존 UI 제거
+        if (shells == null)
+        {
+            Debug.LogError("shells 리스트가 null입니다!");
+            return;
+        }
+
         foreach (var slot in shellSlots)
             Destroy(slot);
         shellSlots.Clear();
 
         foreach (var shell in shells)
         {
+            if (shell == null)
+            {
+                Debug.LogWarning("shell 항목이 null입니다. 무시합니다.");
+                continue;
+            }
+
             GameObject slot = Instantiate(shellSlotPrefab, shellPanelParent);
             Image img = slot.GetComponent<Image>();
-            img.sprite = shell.Type == ShellType.Blank ? blankSprite : buckshotSprite;
-            img.color = new Color(1f, 1f, 1f, 0.2f); // 처음엔 흐리게
+
+            img.color = shell.Type == ShellType.Blank
+                ? new Color(1f, 1f, 1f, 0.2f)
+                : Color.red;
+
             shellSlots.Add(slot);
         }
     }
