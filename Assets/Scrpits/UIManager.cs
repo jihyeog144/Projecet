@@ -8,7 +8,6 @@ public class UIManager : MonoBehaviour
     public Transform shellPanelParent; // 탄환 아이콘들을 담는 부모 오브젝트
     public Sprite blankSprite;
     public Sprite buckshotSprite;
-    public Text shellCountText;
     public Button fireButton;
 
 
@@ -40,10 +39,6 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    public void UpdateShellUI(int remaining)
-    {
-        shellCountText.text = $"남은 탄환: {remaining}";
-    }
 
     public void EnableFireButton(bool enable)
     {

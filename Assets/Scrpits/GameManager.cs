@@ -5,13 +5,15 @@ using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
-    public List<PlayerController> players;
+
+    public PlayerController player;
+    public PlayerController aiPlayer;
+    private bool isPlayerTurn = true;
+
     public Gun gun;
 
     public Button fireButton;
     public UIManager uiManager;
-
-    private int currentPlayerIndex = 0;
 
     void Start()
     {
@@ -22,97 +24,87 @@ public class GameManager : MonoBehaviour
         gun.LoadShells(blankCount, liveCount);
 
         uiManager.CreateShellUI(gun.GetAllShells());
-        uiManager.UpdateShellUI(gun.RemainingShellCount());
 
-        // 여기서 AI들에게 총기(gun) 연결
-        foreach (var player in players)
-        {
-            if (player.isAI && player.aiController != null)
-            {
-                player.aiController.gun = this.gun; // 연결 완료!
-            }
-        }
+        aiPlayer.aiController.gun = gun;
 
         StartTurn();
     }
 
     void StartTurn()
     {
-        if (players.Count <= 1)
+        if (!player.isAlive)
         {
-            Debug.Log("player 승리!");
-            uiManager.EnableFireButton(false);
+            EndGame(aiPlayer);
             return;
         }
 
-        PlayerController player = players[currentPlayerIndex];
-
-        if (player.isAI && player.aiController != null)
+        if (!aiPlayer.isAlive)
         {
-            uiManager.EnableFireButton(false);
-            player.aiController.TakeTurn(OnAICompletedTurn);
+            EndGame(player);
+            return;
+        }
+
+        if (isPlayerTurn)
+        {
+            Debug.Log("플레이어의 차례입니다.");
+            uiManager.EnableFireButton(true);
         }
         else
         {
-            Debug.Log("player의 차례입니다.");
-            uiManager.EnableFireButton(true);
+            Debug.Log("AI의 차례입니다.");
+            uiManager.EnableFireButton(false);
+            aiPlayer.aiController.TakeTurn(OnAITurnCompleted);
         }
     }
 
     public void OnFireButtonClicked()
     {
-        FireCurrentPlayer();
+        if (!isPlayerTurn) return;
+
+        Fire(player);
     }
 
 
-    void OnAICompletedTurn(Shell fired)
+    void OnAITurnCompleted(Shell shell)
     {
-        ProceedAfterFire(fired);
+        FireResult(aiPlayer, shell);
     }
 
-    void AIFire()
+    void Fire(PlayerController who)
     {
-        FireCurrentPlayer();
-    }
+        Shell shell = gun.Fire();
 
-    void FireCurrentPlayer()
-    {
-        PlayerController player = players[currentPlayerIndex];
-        Shell fired = gun.Fire();
-
-        if (fired == null)
+        if (shell == null)
         {
-            Debug.Log("탄환 없음!");
+            Debug.Log("탄환이 모두 소진되었습니다.");
+            EndGame(null);
             return;
         }
 
-        // 🔥 UI 먼저 갱신!
         uiManager.HighlightFiredShell(gun.GetCurrentIndex() - 1);
-        uiManager.UpdateShellUI(gun.RemainingShellCount());
 
-        // 🔥 타격 적용
-        if (fired.Type == ShellType.Live)
-            player.Hit(ShellType.Live);
+        if (shell.Type == ShellType.Live)
+            who.Hit(ShellType.Live);
         else
-            player.ReactToBlank();
+            who.ReactToBlank();
 
-        ProceedAfterFire(fired);
+        FireResult(who, shell);
     }
 
-    void ProceedAfterFire(Shell shell)
+    void FireResult(PlayerController shooter, Shell shell)
     {
-        PlayerController player = players[currentPlayerIndex];
+        // 턴 전환
+        isPlayerTurn = !isPlayerTurn;
 
-        if (!player.isAlive)
-        {
-            players.RemoveAt(currentPlayerIndex);
-        }
-        else
-        {
-            currentPlayerIndex++;
-        }
-
-        currentPlayerIndex %= players.Count;
+        // 다음 턴으로 넘어감
         Invoke(nameof(StartTurn), 2f);
     }
+
+    void EndGame(PlayerController winner)
+    {
+        string msg = winner != null ? "승리!" : "무승부!";
+        Debug.Log(msg);
+        uiManager.EnableFireButton(false);
+    }
+
 }
