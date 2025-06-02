@@ -7,6 +7,8 @@ public class UIManager : MonoBehaviour
     public GameObject shellSlotPrefab; // 탄환 아이콘 프리팹
     public Transform shellPanelParent; // 탄환 아이콘들을 담는 부모 오브젝트
     public Button fireButton;
+    public Sprite blankSprite;
+    public Sprite buckshotSprite;
 
 
     private List<GameObject> shellSlots = new();
@@ -15,26 +17,6 @@ public class UIManager : MonoBehaviour
 
     public void CreateShellUI(List<Shell> shells)
     {
-
-        Debug.Log("💡 CreateShellUI 호출됨. shell 리스트: " + (shells == null ? "NULL" : "OK"));
-
-        if (shells == null)
-        {
-            Debug.LogError("❌ shells 리스트가 null이도다!");
-            return;
-        }
-
-        if (shellSlotPrefab == null)
-        {
-            Debug.LogError("❌ shellSlotPrefab이 설정되지 않았도다!");
-            return;
-        }
-
-        if (shellPanelParent == null)
-        {
-            Debug.LogError("❌ shellPanelParent가 설정되지 않았도다!");
-            return;
-        }
 
         foreach (var slot in shellSlots)
             Destroy(slot);
