@@ -14,8 +14,9 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI playerHPText;
     public TextMeshProUGUI aiHPText;
     public GameObject targetChoicePanel;
+    public Transform roundInfoPanelParent; // 탄환 아이콘 표시 위치
 
-
+    private List<GameObject> roundInfoIcons = new(); // 관리용
     private List<GameObject> shellSlots = new();
 
     private Coroutine playerBlinkRoutine;
@@ -68,7 +69,7 @@ public class UIManager : MonoBehaviour
         // 죽음 처리
         if (current <= 0)
         {
-            targetText.text = "💀 DEAD";
+            targetText.text = " DEAD";
             targetText.color = Color.gray;
             return;
         }
@@ -132,7 +133,7 @@ public class UIManager : MonoBehaviour
 
     public void ShowRoundInfo(int blanks, int lives, float duration = 2f)
     {
-        roundInfoText.text = $"🩸 이번 게임\n공포탄 {blanks}발 / 실탄 {lives}발";
+        roundInfoText.text = $"🩸 This Game \nBlankShell {blanks}Ammo / LiveShell {lives}Ammo";
         roundInfoText.gameObject.SetActive(true);
         StartCoroutine(HideRoundInfoAfterDelay(duration));
     }
@@ -141,5 +142,49 @@ public class UIManager : MonoBehaviour
     {
         yield return new WaitForSeconds(delay);
         roundInfoText.gameObject.SetActive(false);
+    }
+
+    public void ShowRoundIcons(List<Shell> shells, float duration = 2f)
+    {
+        // 기존 아이콘 제거
+        foreach (var icon in roundInfoIcons)
+            Destroy(icon);
+        roundInfoIcons.Clear();
+
+        // 아이콘 생성
+        foreach (var shell in shells)
+        {
+            GameObject icon = Instantiate(shellSlotPrefab, roundInfoPanelParent);
+            Image img = icon.GetComponent<Image>();
+
+            img.sprite = shell.Type == ShellType.Blank ? blankSprite : buckshotSprite;
+            img.color = Color.white; // 진하게 보이게
+
+            roundInfoIcons.Add(icon);
+        }
+
+        // 일정 시간 후 자동 제거
+        StartCoroutine(HideRoundIconsAfterDelay(duration));
+    }
+
+    IEnumerator HideRoundIconsAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        foreach (var icon in roundInfoIcons)
+            Destroy(icon);
+        roundInfoIcons.Clear();
+    }
+
+    public void ShowRoundInfoThenChoice(int blanks, int lives, float infoDuration = 2f)
+    {
+        StartCoroutine(ShowRoundInfoAndWait(blanks, lives, infoDuration));
+    }
+
+    IEnumerator ShowRoundInfoAndWait(int blanks, int lives, float duration)
+    {
+        ShowRoundInfo(blanks, lives, duration);
+        yield return new WaitForSeconds(duration);
+
+        ShowTargetChoice(true); //  탄 정보 사라진 후, 선택 UI 등장!
     }
 }

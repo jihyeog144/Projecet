@@ -60,5 +60,9 @@ public class Gun : MonoBehaviour
         gunTransform.rotation = Quaternion.Euler(0, 0, angle);
     }
 
+    public bool IsEmpty()
+    {
+        return currentShellIndex >= shells.Count;
+    }
 
 }
