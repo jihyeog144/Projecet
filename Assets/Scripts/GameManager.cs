@@ -1,7 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+
 
 
 public class GameManager : MonoBehaviour
@@ -16,7 +19,8 @@ public class GameManager : MonoBehaviour
     public Button fireButton;
     public UIManager uiManager;
 
-
+    public GameObject resultPanel;
+    public TextMeshProUGUI resultText;
 
     void Start()
     {
@@ -38,13 +42,13 @@ public class GameManager : MonoBehaviour
     {
         if (!player.isAlive)
         {
-            EndGame(aiPlayer);
+            EndGame();
             return;
         }
 
         if (!aiPlayer.isAlive)
         {
-            EndGame(player);
+            EndGame();
             return;
         }
 
@@ -74,25 +78,20 @@ public class GameManager : MonoBehaviour
         FireResult(aiPlayer, shell);
     }
 
-    void Fire(PlayerController who)
+    void Fire(PlayerController shooter, Shell shell = null)
     {
-        Shell shell = gun.Fire();
+        if (shell == null) shell = gun.Fire();
+        if (shell == null) return;
 
-        if (shell == null)
-        {
-            Debug.Log("탄환이 모두 소진되었습니다.");
-            EndGame(null);
-            return;
-        }
+        if (shell.Type == ShellType.Live)
+            shooter.Hit(ShellType.Live);
+        else
+            shooter.ReactToBlank();
 
         uiManager.HighlightFiredShell(gun.GetCurrentIndex() - 1);
 
-        if (shell.Type == ShellType.Live)
-            who.Hit(ShellType.Live);
-        else
-            who.ReactToBlank();
-
-        FireResult(who, shell);
+        isPlayerTurn = !isPlayerTurn;
+        Invoke(nameof(StartTurn), 2f);
     }
 
     void FireResult(PlayerController shooter, Shell shell)
@@ -104,11 +103,20 @@ public class GameManager : MonoBehaviour
         Invoke(nameof(StartTurn), 2f);
     }
 
-    void EndGame(PlayerController winner)
+    void EndGame()
     {
-        string msg = winner != null ? "승리!" : "무승부!";
-        Debug.Log(msg);
         uiManager.EnableFireButton(false);
+        resultPanel.SetActive(true);
+
+        if (player.isAlive)
+            resultText.text = "🩸 너는 살아남았다...";
+        else
+            resultText.text = "💀 AI가 살아남았다...";
+    }
+
+    public void RestartGame()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
 }

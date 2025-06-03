@@ -16,6 +16,8 @@ public class PlayerController : MonoBehaviour
     public Text statusText;
     public Slider hpBar; // 체력 UI (선택)
 
+    public Animator animator;
+
     void Start()
     {
         CurrentHp = MaxHp;
@@ -26,6 +28,7 @@ public class PlayerController : MonoBehaviour
     {
         isAlive = false;
         Debug.Log("탈락하였습니다!");
+        animator.SetTrigger("isDead");
         if (statusText != null)
             statusText.text = "💀 탈락";
 
