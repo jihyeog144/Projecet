@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,36 +6,42 @@ public class AIController : MonoBehaviour
 {
     public PlayerController player;
     public Gun gun;
+    private System.Action<Shell> onFiredCallback;
 
     public void TakeTurn(System.Action<Shell> onFired)
     {
-        Debug.Log($"(AI)ÀÇ Â÷·ÊÀÔ´Ï´Ù...");
+        Debug.Log($"(AI)ì˜ ì°¨ë¡€ì…ë‹ˆë‹¤...");
 
-        float decisionTime = Random.Range(1f, 3f); // ¸Á¼³ÀÌ´Â µíÇÑ ¿¬Ãâ
-        Invoke(nameof(DelayedFire), decisionTime);
+        onFiredCallback = onFired;
 
-        void DelayedFire()
+        float decisionTime = Random.Range(1f, 2f); // ë§ì„¤ì´ëŠ” ë“¯í•œ ì—°ì¶œ
+        Invoke(nameof(DelayedFire), decisionTime); 
+    }
+
+    public void DelayedFire()
+    {
+        int target = Random.Range(0, 2);
+        PlayerController targetPlayer = (target == 0) ? player : FindObjectOfType<GameManager>().player;
+
+        Shell firedShell = gun.Fire();
+        if (firedShell == null)
         {
-            Shell firedShell = gun.Fire();
-
-            if (firedShell == null)
-            {
-                Debug.Log("ÅºÈ¯ÀÌ ¾ø½À´Ï´Ù.");
-                return;
-            }
-
-            if (firedShell.Type == ShellType.Live)
-            {
-                Debug.Log(" (AI) À¸¾Ç! ÇÇ°İ!");
-                player.Hit(ShellType.Live);
-            }
-            else
-            {
-                Debug.Log(" (AI) »ì¾Ò´Ù...");
-                player.ReactToBlank();
-            }
-
-            onFired?.Invoke(firedShell); // ÅÏ Á¾·á Äİ¹é
+            Debug.Log("íƒ„í™˜ì´ ì—†ìŠµë‹ˆë‹¤.");
+            onFiredCallback?.Invoke(null);
+            return;
         }
+
+        if (firedShell.Type == ShellType.Live)
+        {
+            Debug.Log("ğŸ’¥ AI ì‹¤íƒ„ ë°œì‚¬!");
+            targetPlayer.Hit(ShellType.Live);
+        }
+        else
+        {
+            Debug.Log("ğŸ˜® AI ê³µí¬íƒ„ ë°œì‚¬");
+            targetPlayer.ReactToBlank();
+        }
+
+        onFiredCallback?.Invoke(firedShell);
     }
 }

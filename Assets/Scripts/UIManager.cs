@@ -14,6 +14,8 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI playerHPText;
     public TextMeshProUGUI aiHPText;
 
+    public GameObject targetChoicePanel;
+
 
     private List<GameObject> shellSlots = new();
 
@@ -120,5 +122,10 @@ public class UIManager : MonoBehaviour
             text.alpha = 1f;
             yield return new WaitForSeconds(0.3f);
         }
+    }
+
+    public void ShowTargetChoice(bool show)
+    {
+        targetChoicePanel.SetActive(show);
     }
 }

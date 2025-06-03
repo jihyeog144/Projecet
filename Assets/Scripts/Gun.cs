@@ -11,6 +11,8 @@ public class Gun : MonoBehaviour
 
     public CinemachineImpulseSource impulse;
 
+    public Transform gunTransform;
+
     public void LoadShells(int blankCount, int buckshotCount)
     {
         shells = new List<Shell>();
@@ -36,6 +38,7 @@ public class Gun : MonoBehaviour
         return shell;
     }
 
+
     public int RemainingShellCount()
     {
         return shells.Count - currentShellIndex;
@@ -49,4 +52,13 @@ public class Gun : MonoBehaviour
     {
         return currentShellIndex;
     }
+
+    public void AimAt(Transform target)
+    {
+        Vector3 direction = target.position - gunTransform.position;
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        gunTransform.rotation = Quaternion.Euler(0, 0, angle);
+    }
+
+
 }
