@@ -13,7 +13,6 @@ public class UIManager : MonoBehaviour
     public Sprite buckshotSprite;
     public TextMeshProUGUI playerHPText;
     public TextMeshProUGUI aiHPText;
-
     public GameObject targetChoicePanel;
 
 
@@ -22,6 +21,7 @@ public class UIManager : MonoBehaviour
     private Coroutine playerBlinkRoutine;
     private Coroutine aiBlinkRoutine;
 
+    public TextMeshProUGUI roundInfoText;
 
 
     public void CreateShellUI(List<Shell> shells)
@@ -126,6 +126,20 @@ public class UIManager : MonoBehaviour
 
     public void ShowTargetChoice(bool show)
     {
-        targetChoicePanel.SetActive(show);
+        if (targetChoicePanel != null)
+            targetChoicePanel.SetActive(show);
+    }
+
+    public void ShowRoundInfo(int blanks, int lives, float duration = 2f)
+    {
+        roundInfoText.text = $"🩸 이번 게임\n공포탄 {blanks}발 / 실탄 {lives}발";
+        roundInfoText.gameObject.SetActive(true);
+        StartCoroutine(HideRoundInfoAfterDelay(duration));
+    }
+
+    IEnumerator HideRoundInfoAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        roundInfoText.gameObject.SetActive(false);
     }
 }

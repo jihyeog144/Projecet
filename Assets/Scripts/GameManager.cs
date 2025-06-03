@@ -41,8 +41,10 @@ public class GameManager : MonoBehaviour
         int liveCount = Random.Range(1, Mathf.Min(3, totalShells));
         int blankCount = totalShells - liveCount;
 
+        // ✅ 총알 로딩
         gun.LoadShells(blankCount, liveCount);
 
+        // ✅ UI에 보여주기!
         uiManager.CreateShellUI(gun.GetAllShells());
 
         aiPlayer.aiController.gun = gun;
@@ -52,13 +54,7 @@ public class GameManager : MonoBehaviour
 
     void StartTurn()
     {
-        if (!player.isAlive)
-        {
-            EndGame();
-            return;
-        }
-
-        if (!aiPlayer.isAlive)
+        if (!player.isAlive || !aiPlayer.isAlive)
         {
             EndGame();
             return;
@@ -67,12 +63,12 @@ public class GameManager : MonoBehaviour
         if (isPlayerTurn)
         {
             Debug.Log("플레이어의 차례입니다.");
-            uiManager.EnableFireButton(true);
+            uiManager.ShowTargetChoice(true); // 🔥 버튼 보이기
         }
         else
         {
             Debug.Log("AI의 차례입니다.");
-            uiManager.EnableFireButton(false);
+            uiManager.ShowTargetChoice(false); // 🔒 혹시 남아 있을 버튼 숨기기
             aiPlayer.aiController.TakeTurn(OnAITurnCompleted);
         }
     }
@@ -107,20 +103,27 @@ public class GameManager : MonoBehaviour
 
     bool FireAtTarget(PlayerController target)
     {
+        Debug.Log($"🎯 FireAtTarget 실행 대상: {target.name}");
+
         Shell shell = gun.Fire();
-        if (shell == null) return false;
+
+        if (shell == null)
+        {
+            Debug.LogError("❌ Shell이 null! 탄이 없습니다.");
+            return false;
+        }
 
         if (shell.Type == ShellType.Live)
         {
             target.Hit(ShellType.Live);
             Debug.Log($"💥 실탄! {target.name} 피격!");
-            return true; // 실탄
+            return true;
         }
         else
         {
             target.ReactToBlank();
             Debug.Log($"😮 공포탄. {target.name} 생존.");
-            return false; // 공포탄
+            return false;
         }
     }
 
@@ -140,7 +143,7 @@ public class GameManager : MonoBehaviour
 
     public void OnTargetChosen(bool targetIsSelf)
     {
-        uiManager.ShowTargetChoice(false);
+        uiManager.ShowTargetChoice(false); // ✅ 버튼 패널 숨기기!
 
         PlayerController target = targetIsSelf ? player : aiPlayer;
 
@@ -148,8 +151,10 @@ public class GameManager : MonoBehaviour
 
         bool wasLive = FireAtTarget(target);
 
-        if (wasLive) EndTurn();
-        else Invoke(nameof(StartTurn), 2f);
+        if (wasLive)
+            EndTurn();
+        else
+            Invoke(nameof(StartTurn), 2f);
     }
 
 
