@@ -6,6 +6,7 @@ using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour
 {
+
     public bool isAlive = true;
     public int MaxHp = 3;
     public int CurrentHp;
@@ -44,16 +45,16 @@ public class PlayerController : MonoBehaviour
 
     public void Hit(ShellType shellType)
     {
-        if (shellType != ShellType.Live) return;
+        if (shellType == ShellType.Live)
+        {
+            CurrentHp--;
 
-        CurrentHp -= 1;
-        Debug.Log($"[피격] 남은 체력: {CurrentHp}");
-        UpdateHPUI();
+            // UI Update
+            FindObjectOfType<UIManager>().UpdateHP(this, CurrentHp, MaxHp);
 
-        if (CurrentHp <= 0)
-            Die();
-        else if (statusText != null)
-            statusText.text = $"😵 피격! HP: {CurrentHp}";
+            if (CurrentHp <= 0)
+                Die();
+        }
     }
 
     public void UpdateHPUI()

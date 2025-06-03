@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,9 +11,14 @@ public class UIManager : MonoBehaviour
     public Button fireButton;
     public Sprite blankSprite;
     public Sprite buckshotSprite;
+    public TextMeshProUGUI playerHPText;
+    public TextMeshProUGUI aiHPText;
 
 
     private List<GameObject> shellSlots = new();
+
+    private Coroutine playerBlinkRoutine;
+    private Coroutine aiBlinkRoutine;
 
 
 
@@ -48,5 +55,70 @@ public class UIManager : MonoBehaviour
     public void EnableFireButton(bool enable)
     {
         fireButton.interactable = enable;
+    }
+
+    public void UpdateHP(PlayerController player, int current, int max)
+    {
+        TextMeshProUGUI targetText  = player.isAI ? aiHPText : playerHPText;
+
+        Debug.Log($"🩸 UpdateHP 호출됨: {player.name} → {current} / {max}");
+
+        // 죽음 처리
+        if (current <= 0)
+        {
+            targetText.text = "💀 DEAD";
+            targetText.color = Color.gray;
+            return;
+        }
+
+        // 일반 HP 표시
+        targetText.text = $"HP: {current} / {max}";
+
+        // HP 감소 → 붉게
+        targetText.color = current < max ? Color.red : Color.white;
+
+        // 깜빡이기 조건: HP 1 남음
+        if (current == 1)
+        {
+            Coroutine blink = StartCoroutine(BlinkText(targetText));
+
+            if (player.isAI)
+            {
+                if (aiBlinkRoutine != null) StopCoroutine(aiBlinkRoutine);
+                aiBlinkRoutine = blink;
+            }
+            else
+            {
+                if (playerBlinkRoutine != null) StopCoroutine(playerBlinkRoutine);
+                playerBlinkRoutine = blink;
+            }
+        }
+        else
+        {
+            // 깜빡이기 해제
+            if (player.isAI && aiBlinkRoutine != null)
+            {
+                StopCoroutine(aiBlinkRoutine);
+                aiBlinkRoutine = null;
+                targetText.color = Color.red;
+            }
+            else if (!player.isAI && playerBlinkRoutine != null)
+            {
+                StopCoroutine(playerBlinkRoutine);
+                playerBlinkRoutine = null;
+                targetText.color = Color.red;
+            }
+        }
+    }
+
+    IEnumerator BlinkText(TextMeshProUGUI text)
+    {
+        while (true)
+        {
+            text.alpha = 0.3f;
+            yield return new WaitForSeconds(0.3f);
+            text.alpha = 1f;
+            yield return new WaitForSeconds(0.3f);
+        }
     }
 }

@@ -24,6 +24,13 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        // 시작 전 초기화 작업
+        player.CurrentHp = player.MaxHp; 
+        aiPlayer.CurrentHp = aiPlayer.MaxHp;
+
+        uiManager.UpdateHP(player, player.CurrentHp, player.MaxHp);
+        uiManager.UpdateHP(aiPlayer, aiPlayer.CurrentHp, aiPlayer.MaxHp);
+
 
         int totalShells = Random.Range(4, 7);
         int liveCount = Random.Range(1, Mathf.Min(3, totalShells));
