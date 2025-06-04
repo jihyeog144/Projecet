@@ -29,6 +29,11 @@ public class PlayerController : MonoBehaviour
             onDeath.Invoke(); //GameManager에게 알림
     }
 
+    public void Fire()
+    {
+        animator?.SetTrigger("Fire");
+    }
+
     public void ReactToBlank()
     {
         Debug.Log("휴… 공포탄이었군.");
@@ -39,6 +44,8 @@ public class PlayerController : MonoBehaviour
         if (shellType == ShellType.Live)
         {
             CurrentHp--;
+
+            animator?.SetTrigger("Hit");
 
             // UI Update
             FindObjectOfType<UIManager>().UpdateHP(this, CurrentHp, MaxHp);
