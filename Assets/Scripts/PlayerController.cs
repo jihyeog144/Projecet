@@ -14,33 +14,24 @@ public class PlayerController : MonoBehaviour
     public AIController aiController;
     public bool isAI = false;
 
-    public Text statusText;
-    public Slider hpBar; // 체력 UI (선택)
-
+    public System.Action onDeath;
     public Animator animator;
-
-    void Start()
-    {
-        CurrentHp = MaxHp;
-        UpdateHPUI();
-    }
-
     public void Die()
     {
         isAlive = false;
-        Debug.Log("탈락하였습니다!");
-        animator.SetTrigger("isDead");
-        if (statusText != null)
-            statusText.text = "💀 탈락";
 
-        // 여기에 탈락 애니메이션, 효과 등 추가 가능
+        if (animator != null)
+            animator.SetTrigger("Die");
+
+        Debug.Log($"{name} 죽음");
+
+        if (onDeath != null)
+            onDeath.Invoke(); //GameManager에게 알림
     }
 
     public void ReactToBlank()
     {
         Debug.Log("휴… 공포탄이었군.");
-        if (statusText != null)
-            statusText.text = "😮 생존!";
     }
 
     public void Hit(ShellType shellType)
@@ -57,11 +48,4 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    public void UpdateHPUI()
-    {
-        if (hpBar != null)
-        {
-            hpBar.value = (float)CurrentHp / MaxHp;
-        }
-    }
 }

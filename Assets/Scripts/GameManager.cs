@@ -22,17 +22,18 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        // 체력 초기화
         player.CurrentHp = player.MaxHp;
         aiPlayer.CurrentHp = aiPlayer.MaxHp;
+
+        //죽음 시 EndGame 호출되도록 연결
+        player.onDeath = EndGame;
+        aiPlayer.onDeath = EndGame;
 
         uiManager.UpdateHP(player, player.CurrentHp, player.MaxHp);
         uiManager.UpdateHP(aiPlayer, aiPlayer.CurrentHp, aiPlayer.MaxHp);
 
-        RefillAmmo(showUI: false); //  시작 시엔 선택 UI 안 뜨게  첫 탄환 세팅
-
+        RefillAmmo();
         aiPlayer.aiController.gun = gun;
-
         StartTurn();
     }
 
@@ -46,12 +47,12 @@ public class GameManager : MonoBehaviour
 
         if (isPlayerTurn)
         {
-            Debug.Log(" 플레이어 턴 시작");
-            uiManager.ShowTargetChoice(true);
+            Debug.Log("플레이어 턴 시작");
+            uiManager.ShowTargetChoice(true); // 선택 패널만 표시
         }
         else
         {
-            Debug.Log(" AI 턴 시작");
+            Debug.Log("AI 턴 시작");
             uiManager.ShowTargetChoice(false);
             aiPlayer.aiController.TakeTurn(OnAITurnCompleted);
         }
@@ -67,9 +68,8 @@ public class GameManager : MonoBehaviour
 
         if (shell == null)
         {
-            Debug.Log(" 탄환 없음");
-            RefillAmmo(); // 자동 리셋
-            Invoke(nameof(StartTurn), 1f);
+            Debug.Log(" 탄환 없음 → 턴 종료만");
+            EndTurn(); // 탄 없어도 리필은 다음 턴 시작 전으로 미룬다
             return;
         }
 
@@ -77,8 +77,6 @@ public class GameManager : MonoBehaviour
         {
             target.Hit(ShellType.Live);
             Debug.Log($" 실탄! {target.name} 피격");
-
-            // 실탄은 무조건 턴 넘김
             EndTurn();
         }
         else
@@ -88,12 +86,10 @@ public class GameManager : MonoBehaviour
 
             if (targetIsSelf)
             {
-                // 자기 자신에게 공포탄 → 턴 유지
                 Invoke(nameof(StartTurn), 2f);
             }
             else
             {
-                // 상대에게 공포탄 → 턴 넘김
                 EndTurn();
             }
         }
@@ -103,67 +99,53 @@ public class GameManager : MonoBehaviour
     {
         if (shell == null)
         {
-            Debug.LogWarning("AI가 탄 없이 발사 시도 → 탄 리셋");
-            RefillAmmo();
-            Invoke(nameof(StartTurn), 1f);
+            Debug.Log(" (AI) 탄환 없음 → 턴 종료");
+            EndTurn();
             return;
         }
 
-        if (shell.Type == ShellType.Live)
-            EndTurn();
-        else
+        if (shell.Type == ShellType.Blank && aiPlayer == gun.CurrentTarget)
+        {
             Invoke(nameof(StartTurn), 2f);
-    }
-
-    bool FireAtTarget(PlayerController target)
-    {
-        if (gun.IsEmpty())
-        {
-            Debug.Log(" 탄환 소진! 자동 리셋");
-            RefillAmmo();
-            return false;
-        }
-
-        Shell shell = gun.Fire();
-        if (shell == null) return false;
-
-        if (shell.Type == ShellType.Live)
-        {
-            target.Hit(ShellType.Live);
-            Debug.Log($" 실탄! {target.name} 피격");
-            return true;
         }
         else
         {
-            target.ReactToBlank();
-            Debug.Log($" 공포탄. {target.name} 생존");
-            return false;
+            EndTurn();
         }
     }
 
-    void RefillAmmo(bool showUI = true)
+
+    void RefillAmmo()
     {
+        if (!player.isAlive || !aiPlayer.isAlive)
+            return; // 게임 끝나게 된다면 동작 방지
         int total = Random.Range(4, 7);
-        int live = Random.Range(1, Mathf.Min(3, total));
+        int live = Random.Range(2, Mathf.Min(3, total));
         int blank = total - live;
 
         gun.LoadShells(blank, live);
-        uiManager.CreateShellUI(gun.GetAllShells());
-        uiManager.ShowRoundIcons(gun.GetAllShells(), 2f);
-        uiManager.ShowRoundInfo(blank, live);
+        uiManager.ShowRoundInfo(blank, live); // 라운드 시작에만 실행
 
-        // 처음 시작 시엔 showUI == false
-        if (isPlayerTurn && showUI)
-        {
-            uiManager.ShowRoundInfoThenChoice(blank, live); //  이 부분이 조건부 실행!
-        }
-
-        Debug.Log($"🔁 탄환 재장전: 공포탄 {blank} / 실탄 {live}");
+        Debug.Log($"탄환 재장전: 공포탄 {blank} / 실탄 {live}");
     }
 
     void EndTurn()
     {
+        // 💀 죽음 먼저 체크!
+        if (!player.isAlive || !aiPlayer.isAlive)
+        {
+            EndGame();
+            return;
+        }
+
         isPlayerTurn = !isPlayerTurn;
+
+        if (gun.IsAmmoEmpty)
+        {
+            Debug.Log("탄환 전부 소모! → 라운드 종료 후 재장전");
+            RefillAmmo();
+        }
+
         Invoke(nameof(StartTurn), 2f);
     }
 
@@ -171,7 +153,7 @@ public class GameManager : MonoBehaviour
     {
         uiManager.EnableFireButton(false);
         resultPanel.SetActive(true);
-        resultText.text = player.isAlive ? "🩸 너는 살아남았다..." : " AI가 살아남았다...";
+        resultText.text = player.isAlive ? "You Alive" : " You Die";
     }
 
     public void RestartGame()

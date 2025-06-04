@@ -6,8 +6,6 @@ using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
-    public GameObject shellSlotPrefab; // 탄환 아이콘 프리팹
-    public Transform shellPanelParent; // 탄환 아이콘들을 담는 부모 오브젝트
     public Button fireButton;
     public Sprite blankSprite;
     public Sprite buckshotSprite;
@@ -23,27 +21,6 @@ public class UIManager : MonoBehaviour
     private Coroutine aiBlinkRoutine;
 
     public TextMeshProUGUI roundInfoText;
-
-
-    public void CreateShellUI(List<Shell> shells)
-    {
-
-        foreach (var slot in shellSlots)
-            Destroy(slot);
-        shellSlots.Clear();
-
-        foreach (var shell in shells)
-        {
-            GameObject slot = Instantiate(shellSlotPrefab, shellPanelParent);
-            Image img = slot.GetComponent<Image>();
-
-            img.color = shell.Type == ShellType.Blank
-                ? new Color(1f, 1f, 1f, 0.2f) // 공포탄: 희미한 회색
-                : Color.red;                  // 실탄: 붉은 피색
-
-            shellSlots.Add(slot);
-        }
-    }
 
     public void HighlightFiredShell(int index)
     {
@@ -133,7 +110,7 @@ public class UIManager : MonoBehaviour
 
     public void ShowRoundInfo(int blanks, int lives, float duration = 2f)
     {
-        roundInfoText.text = $"🩸 This Game \nBlankShell {blanks}Ammo / LiveShell {lives}Ammo";
+        roundInfoText.text = $"This Game \nBlankShell {blanks}Ammo / LiveShell {lives}Ammo";
         roundInfoText.gameObject.SetActive(true);
         StartCoroutine(HideRoundInfoAfterDelay(duration));
     }
@@ -144,28 +121,6 @@ public class UIManager : MonoBehaviour
         roundInfoText.gameObject.SetActive(false);
     }
 
-    public void ShowRoundIcons(List<Shell> shells, float duration = 2f)
-    {
-        // 기존 아이콘 제거
-        foreach (var icon in roundInfoIcons)
-            Destroy(icon);
-        roundInfoIcons.Clear();
-
-        // 아이콘 생성
-        foreach (var shell in shells)
-        {
-            GameObject icon = Instantiate(shellSlotPrefab, roundInfoPanelParent);
-            Image img = icon.GetComponent<Image>();
-
-            img.sprite = shell.Type == ShellType.Blank ? blankSprite : buckshotSprite;
-            img.color = Color.white; // 진하게 보이게
-
-            roundInfoIcons.Add(icon);
-        }
-
-        // 일정 시간 후 자동 제거
-        StartCoroutine(HideRoundIconsAfterDelay(duration));
-    }
 
     IEnumerator HideRoundIconsAfterDelay(float delay)
     {

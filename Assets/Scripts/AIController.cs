@@ -6,42 +6,55 @@ public class AIController : MonoBehaviour
 {
     public PlayerController player;
     public Gun gun;
+    public Animator animator;
     private System.Action<Shell> onFiredCallback;
 
     public void TakeTurn(System.Action<Shell> onFired)
     {
-        Debug.Log($"(AI)의 차례입니다...");
-
+        Debug.Log(" (AI)의 차례입니다...");
         onFiredCallback = onFired;
 
-        float decisionTime = Random.Range(1f, 2f); // 망설이는 듯한 연출
-        Invoke(nameof(DelayedFire), decisionTime); 
+        float decisionTime = Random.Range(1f, 2f); // 고민하는 듯한 연출
+        Invoke(nameof(DelayedFire), decisionTime);
     }
 
-    public void DelayedFire()
+    void DelayedFire()
     {
-        int target = Random.Range(0, 2);
-        PlayerController targetPlayer = (target == 0) ? player : FindObjectOfType<GameManager>().player;
+        // 대상 결정: 0 = 자기, 1 = 플레이어
+        bool targetIsSelf = Random.Range(0, 2) == 0;
+        PlayerController target = targetIsSelf ? player : FindObjectOfType<GameManager>().player;
 
-        Shell firedShell = gun.Fire();
-        if (firedShell == null)
+        gun.AimAt(target.transform);
+
+        Shell shell = gun.Fire();
+        if (shell == null)
         {
-            Debug.Log("탄환이 없습니다.");
+            Debug.Log(" (AI) 탄환 없음!");
             onFiredCallback?.Invoke(null);
             return;
         }
 
-        if (firedShell.Type == ShellType.Live)
+        if (shell.Type == ShellType.Live)
         {
-            Debug.Log("💥 AI 실탄 발사!");
-            targetPlayer.Hit(ShellType.Live);
+            target.Hit(ShellType.Live);
+            Debug.Log($" (AI) 실탄 발사! → {target.name} 피격");
+            onFiredCallback?.Invoke(shell); // 턴 종료
         }
         else
         {
-            Debug.Log("😮 AI 공포탄 발사");
-            targetPlayer.ReactToBlank();
-        }
+            target.ReactToBlank();
+            Debug.Log($" (AI) 공포탄! → {target.name} 생존");
 
-        onFiredCallback?.Invoke(firedShell);
+            if (targetIsSelf)
+            {
+                // 자기 자신에게 공포탄 → 턴 유지
+                onFiredCallback?.Invoke(shell); // 유지 판단은 GameManager에서
+            }
+            else
+            {
+                // 상대에게 공포탄 → 턴 종료
+                onFiredCallback?.Invoke(shell);
+            }
+        }
     }
 }

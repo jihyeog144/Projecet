@@ -4,14 +4,21 @@ using System.Linq;
 using UnityEngine;
 using Cinemachine;
 
+
 public class Gun : MonoBehaviour
 {
     public List<Shell> shells = new();
-    private int currentShellIndex = 0;
+    private int currentIndex = 0;
+    public PlayerController CurrentTarget { get; private set; } //  ¹æ±Ý ½ð ´ë»ó!
 
-    public CinemachineImpulseSource impulse;
+    public bool IsAmmoEmpty => currentIndex >= shells.Count;
 
-    public Transform gunTransform;
+    public Transform gunTransform; // ÃÑ ÀüÃ¼ ¿ÀºêÁ§Æ®
+
+    public List<Shell> GetAllShells()
+    {
+        return shells;
+    }
 
     public void LoadShells(int blankCount, int buckshotCount)
     {
@@ -21,48 +28,26 @@ public class Gun : MonoBehaviour
         for (int i = 0; i < buckshotCount; i++) shells.Add(new Shell(ShellType.Live));
 
         shells = shells.OrderBy(x => Random.value).ToList(); // ¼ÅÇÃ
-        currentShellIndex = 0;
+        currentIndex = 0;
     }
 
-    public Shell Fire()
+    public Shell Fire(PlayerController target = null)
     {
-        if (currentShellIndex >= shells.Count) return null;
+        if (currentIndex >= shells.Count)
+            return null;
 
-        Shell shell = shells[currentShellIndex++];
+        Shell shell = shells[currentIndex];
+        currentIndex++;
 
-        if (shell.Type == ShellType.Live && impulse != null)
-        {
-            impulse.GenerateImpulse(); // Èçµé¸² ¹ß»ý!
-        }
-
+        CurrentTarget = target;
         return shell;
-    }
-
-
-    public int RemainingShellCount()
-    {
-        return shells.Count - currentShellIndex;
-    }
-
-    public List<Shell> GetAllShells()
-    {
-        return shells;
-    }
-    public int GetCurrentIndex()
-    {
-        return currentShellIndex;
     }
 
     public void AimAt(Transform target)
     {
-        Vector3 direction = target.position - gunTransform.position;
-        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        Vector3 dir = target.position - gunTransform.position;
+        float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
         gunTransform.rotation = Quaternion.Euler(0, 0, angle);
     }
-
-    public bool IsEmpty()
-    {
-        return currentShellIndex >= shells.Count;
-    }
-
+    public int RemainingShellCount() => shells.Count - currentIndex;
 }
