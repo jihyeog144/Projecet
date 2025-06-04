@@ -14,7 +14,9 @@ public class Gun : MonoBehaviour
     public bool IsAmmoEmpty => currentIndex >= shells.Count;
 
     public Transform gunTransform; // 총 전체 오브젝트
-
+    public ParticleSystem muzzleFlash;
+    public Color blankColor = Color.white;
+    public Color liveColor = Color.red;
     public List<Shell> GetAllShells()
     {
         return shells;
@@ -50,4 +52,5 @@ public class Gun : MonoBehaviour
         gunTransform.rotation = Quaternion.Euler(0, 0, angle);
     }
     public int RemainingShellCount() => shells.Count - currentIndex;
+
 }

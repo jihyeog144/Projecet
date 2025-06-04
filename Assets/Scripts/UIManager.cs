@@ -14,13 +14,13 @@ public class UIManager : MonoBehaviour
     public GameObject targetChoicePanel;
     public Transform roundInfoPanelParent; // 탄환 아이콘 표시 위치
 
-    private List<GameObject> roundInfoIcons = new(); // 관리용
     private List<GameObject> shellSlots = new();
 
     private Coroutine playerBlinkRoutine;
     private Coroutine aiBlinkRoutine;
 
     public TextMeshProUGUI roundInfoText;
+    public TextMeshProUGUI shotInfoText;
 
     public void HighlightFiredShell(int index)
     {
@@ -90,7 +90,6 @@ public class UIManager : MonoBehaviour
             }
         }
     }
-
     IEnumerator BlinkText(TextMeshProUGUI text)
     {
         while (true)
@@ -122,14 +121,6 @@ public class UIManager : MonoBehaviour
     }
 
 
-    IEnumerator HideRoundIconsAfterDelay(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        foreach (var icon in roundInfoIcons)
-            Destroy(icon);
-        roundInfoIcons.Clear();
-    }
-
     public void ShowRoundInfoThenChoice(int blanks, int lives, float infoDuration = 2f)
     {
         StartCoroutine(ShowRoundInfoAndWait(blanks, lives, infoDuration));
@@ -141,5 +132,19 @@ public class UIManager : MonoBehaviour
         yield return new WaitForSeconds(duration);
 
         ShowTargetChoice(true); //  탄 정보 사라진 후, 선택 UI 등장!
+    }
+
+    public void ShowShotResult(ShellType type, float duration = 1.5f)
+    {
+        shotInfoText.text = type == ShellType.Blank ? "🔘 공포탄 Fired!" : "🔴 실탄 Fired!";
+        shotInfoText.color = type == ShellType.Blank ? Color.gray : Color.red;
+        shotInfoText.gameObject.SetActive(true);
+        StartCoroutine(HideShotInfo(duration));
+    }
+
+    IEnumerator HideShotInfo(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        shotInfoText.gameObject.SetActive(false);
     }
 }

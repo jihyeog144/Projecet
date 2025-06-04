@@ -66,6 +66,7 @@ public class GameManager : MonoBehaviour
 
         gun.AimAt(target.transform);
         Shell shell = gun.Fire();
+        uiManager.ShowShotResult(shell.Type);
 
         if (shell == null)
         {
@@ -132,7 +133,7 @@ public class GameManager : MonoBehaviour
 
     void EndTurn()
     {
-        // 💀 죽음 먼저 체크!
+        // 죽음 먼저 체크!
         if (!player.isAlive || !aiPlayer.isAlive)
         {
             EndGame();
